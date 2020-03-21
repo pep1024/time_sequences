@@ -1,0 +1,21 @@
+---
+title: "Time sequences"
+author: "Pep Porrà"
+date: "March, 21st 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Goal
+
+To give examples of time sequence management using the package {xts}.
+
+## Method
+
+We will define several time sequences and operate with them to give useful tricks.
+
+## Time series Definition
+
