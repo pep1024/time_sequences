@@ -17,5 +17,58 @@ To give examples of time sequence management using the package {xts}.
 
 We will define several time sequences and operate with them to give useful tricks.
 
-## Time series Definition
+## Dates sequences definition
+
+Use `seq.Date(from, to, by, length.out, along.with)` to define sequences of dates
+
+The `by` parameter can be "day", "week", "month", "quarter" or "year" with a positive or negative integer preceding it and a space. Also a number that is taken as days.
+
+We define first a sequence of 5 dates starting on 2000-01-01 every 10 days
+
+```{r}
+tseq1 <- seq(from = as.Date('2000-01-01'), by = 10, len = 5)
+tseq1
+```
+
+Same as tseq1 but every 2 weeks until 2000-02-28
+
+```{r}
+(tseq2 <- seq.Date(as.Date("2000-01-01"), as.Date("2000-02-28"), by = "2 weeks"))
+```
+
+Third sequence is the first days of the first 5 years of 21st century
+
+```{r}
+tseq3 <- seq.Date(from = as.Date('2000-01-01'), by = 'years', len = 5)
+tseq3
+```
+
+Last day of every quarter, in 2002
+
+```{r}
+tseq4 <- seq.Date(from = as.Date('2002-03-31'),
+  to = as.Date("2002-12-31"), by = "quarter")
+tseq4
+```
+
+Last days of the first 5 month of 2004
+```{r}
+tseq5 <- seq.Date(from = as.Date('2004-01-31'),
+  by = "1 months", len = 5)
+tseq5 
+tseq5 <- seq.Date(from = as.Date('2004-02-01'),
+  by = "1 months", len = 5) - 1
+tseq5
+```
+
+Last day of February of for years 2002 to 2007
+
+```{r}
+tseq6 <- seq.Date(from = as.Date('2001-02-28'), to = as.Date("2007-03-01"),
+  by = "1 year")
+tseq6
+tseq6 <- seq.Date(from = as.Date('2001-03-01'), to = as.Date("2007-03-01"),
+  by = "1 year") - 1
+tseq6
+```
 
