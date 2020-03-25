@@ -9,6 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r, echo=FALSE}
+library(xts)
+```
+
 ## Goal
 
 To give examples of time sequence management using the package {xts}.
@@ -43,23 +47,31 @@ tseq3 <- seq.Date(from = as.Date('2000-01-01'), by = 'years', len = 5)
 tseq3
 ```
 
-Last day of every quarter, in 2002
+Last day of every quarter in 2002. Questions about last day in a period are more subtle as days in each period are different. The trick consists in computing first days of next quarters and substract 1 day
 
 ```{r}
 tseq4 <- seq.Date(from = as.Date('2002-03-31'),
   to = as.Date("2002-12-31"), by = "quarter")
 tseq4
+tseq4 <- seq.Date(from = as.Date('2002-04-01'),
+  to = as.Date("2003-01-01"), by = "quarter") - 1
+tseq4
 ```
 
-Last days of the first 5 month of 2004
+Last days of the first 5 month of 2004.
 ```{r}
 tseq5 <- seq.Date(from = as.Date('2004-01-31'),
   by = "1 months", len = 5)
-tseq5 
+tseq5
+tseq5 <- seq.Date(from = as.Date('2004-01-28'),
+  by = "1 months", len = 5)
+tseq5
 tseq5 <- seq.Date(from = as.Date('2004-02-01'),
   by = "1 months", len = 5) - 1
 tseq5
 ```
+
+Note that in this example, "month" period does not work as expected for the last day of the month (from 29 to 31) as different month have different days. therefore, finding the last day of every month requires some care
 
 Last day of February of for years 2002 to 2007
 
@@ -70,5 +82,122 @@ tseq6
 tseq6 <- seq.Date(from = as.Date('2001-03-01'), to = as.Date("2007-03-01"),
   by = "1 year") - 1
 tseq6
+```
+
+Find the second saturday of the first 6 months of 2004
+
+```{r}
+tseq7 <- seq.Date(from = as.Date('2004-01-01'), to = as.Date('2004-06-30'), by = 1)
+tseq7a <- tseq7[weekdays(tseq7) == "sábado"]
+tseq7a <- tseq7[format(tseq7, "%u") == 6]
+tseq7b <- tapply(tseq7a, format(tseq7a, "%Y-%m"), '[', 2)
+tseq7c <- as.Date(tseq7b, origin = "1970-01-01")
+tseq7c
+```
+
+Find the weekend days of August 2014
+
+```{r}
+tseq8 <- seq.Date(as.Date("2014-08-01"), as.Date("2014-08-31"), by = 1)
+tseq8a <- tseq8[format(tseq8, "%u") > 5]
+tseq8a
+```
+
+Last Sunday of August of years 2001 to 2007
+
+```{r}
+tseq9 <- seq.Date(as.Date("2001-01-01"), as.Date("2007-12-31"), by = 1)
+tseq9a <- tseq9[format(tseq9, "%m") == "08" & format(tseq9, "%u") == 7]
+tseq9b <- rev(tseq9a)
+tseq9c <- tapply(tseq9b, format(tseq9b, "%Y"), '[', 1)
+tseq9d <- as.Date(tseq9c, origin = "1970-01-01")
+tseq9d
+```
+
+Find the number of days of each of the first 6 months of 2004 of the first week of the month (it includes any day of the month)
+
+```{r}
+tseq10 <- seq.Date(from = as.Date("2004-01-01"), to = as.Date("2004-06-30"), by = 1)
+tseq10b <- split(tseq10, format(tseq10, "%m"))
+tseq10c <- lapply(tseq10b, 
+  function(seq) tapply(seq, format(seq, "%W"), length))
+tseq10d <- lapply(tseq10c, '[', 1)
+tseq10e <- unlist(tseq10d)
+names(tseq10e) <- unique(format(tseq10, "%Y-%m"))
+tseq10e
+```
+
+Find the number of days of each of the first 6 months of 2004 of the last week of the month (it includes any day of the month)
+
+```{r}
+tseq11 <- seq.Date(from = as.Date("2004-01-01"), to = as.Date("2004-06-30"), by = 1)
+tseq11b <- split(tseq10, format(tseq11, "%m"))
+tseq11c <- lapply(tseq11b, 
+  function(seq) tapply(seq, format(seq, "%W"), length))
+tseq11d <- lapply(tseq11c, rev)
+tseq11e <- lapply(tseq11d, '[', 1)
+tseq11f <- unlist(tseq11e)
+names(tseq11f) <- unique(format(tseq11, "%Y-%m"))
+tseq11f
+```
+
+## using `xts` package
+
+```{r}
+tseq1
+xts1 <- xts(rep(0, length(tseq1)), order.by = tseq1)
+index(xts1)
+index(xts1) == tseq1
+```
+
+Last day of every quarter in 2002
+```{r}
+year_2002_days <- seq.Date(as.Date("2002-01-01"), as.Date("2002-12-31"), by ="days")
+n_2002 <- length(year_2002_days)
+xts4 <- xts(rep(0, n_2002), year_2002_days)
+ep4 <- endpoints(xts4, on = "quarters", k = 1)
+index(xts4[ep4])
+```
+
+Equivalently
+```{r}
+index(
+  do.call(
+    c,
+      lapply(split(xts4, "quarters"), last, "1 day")
+  )
+)
+```
+
+Last day of February of for years 2002 to 2007
+
+```{r}
+year_2002_2007_days <- seq.Date(as.Date("2002-01-01"), as.Date("2007-12-31"), by ="days")
+feb_2002_2007_days <- year_2002_2007_days[format(year_2002_2007_days, "%m") == "02"]
+ep6 <- endpoints(feb_2002_2007_days, on = "months")
+feb_2002_2007_days[ep6]
+```
+
+Find the second saturday of the first 6 months of 2004
+
+```{r}
+do.call(
+  c,
+  lapply(split(tseq7a, format(tseq7a, "%m")),'[', 2)
+)
+```
+
+Find the fifth saturday of the first 6 months of 2004
+
+```{r}
+do.call(
+  c,
+  lapply(split(tseq7a, format(tseq7a, "%m")),'[', 5)
+)
+```
+
+```{r}
+xts7 <- xts(1:length(tseq7a), tseq7a)
+index(xts7)[apply.monthly(xts7, first, "2 weeks")[, 2]]
 ```
 
