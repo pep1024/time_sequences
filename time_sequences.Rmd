@@ -1,5 +1,5 @@
 ---
-title: "Time sequences"
+title: "Date sequences"
 author: "Pep Porrà"
 date: "March, 21st 2020"
 output: html_document
@@ -199,5 +199,11 @@ do.call(
 ```{r}
 xts7 <- xts(1:length(tseq7a), tseq7a)
 index(xts7)[apply.monthly(xts7, first, "2 weeks")[, 2]]
+```
+
+```{r}
+do.call(c,
+  by(tseq7a, format(tseq7a, "%m"), function(x) x[5])
+)
 ```
 
