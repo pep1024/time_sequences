@@ -187,6 +187,13 @@ do.call(
 )
 ```
 
+
+```{r}
+xts7 <- xts(1:length(tseq7a), tseq7a)
+index(xts7)[apply.monthly(xts7, first, "2 weeks")[, 2]]
+```
+
+
 Find the fifth saturday of the first 6 months of 2004
 
 ```{r}
@@ -196,14 +203,9 @@ do.call(
 )
 ```
 
-```{r}
-xts7 <- xts(1:length(tseq7a), tseq7a)
-index(xts7)[apply.monthly(xts7, first, "2 weeks")[, 2]]
-```
 
 ```{r}
-do.call(c,
-  by(tseq7a, format(tseq7a, "%m"), function(x) x[5])
-)
+# tapply(tseq7a, list(month = format(tseq7a, "%m")), '[', 5)
+ tapply(tseq7a, list(month = format(tseq7a, "%m")))
 ```
 
