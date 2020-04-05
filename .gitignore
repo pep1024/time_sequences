@@ -5,3 +5,5 @@
 *.Rproj
 *.html
 .Rhistory
+rsconnect/
+xts1.csv
