@@ -1,29 +1,53 @@
 ---
 title: "Date sequences"
 author: "Pep Porrà"
-date: "March, 21st 2020"
-output: html_document
+date: "March 21, 2020"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
 ---
 
 ```{r setup, include=FALSE}
+# default, cerulean, journal, flatly, darkly, readable, spacelab, united, cosmo, lumen, paper, sandstone, simplex, and yeti
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, message=F, warning=F, results = "hide"}
+Sys.setlocale(locale = "English")
 library(xts)
+library(dygraphs)
 ```
+
+```{r timeline, echo=FALSE}
+dateline <- function(seq_dt){
+  extrems <- range(seq_dt)
+  n_dates <- length(seq_dt)
+  plot(seq_dt, rep(1, n_dates),
+    pch = 16, col = "red", 
+    ylim = c(0.8, 1.2), yaxt = "n", ylab = "",
+    xlab = "")
+  x_ticks <- axis.Date(1, seq_dt, labels = FALSE)
+  abline(h = 1, lwd = 1)
+  abline(v = x_ticks, lty = 3, col = "lightgray")
+  box("figure", lty = 1, col = "lightgray")
+}
+```
+
 
 ## Goal
 
-To give examples of time sequence management using the package {xts}.
+To give examples of date sequence management using `seq.Date` and the package {xts}.
 
 ## Method
 
-We will define several time sequences and operate with them to give useful tricks.
+We will define several date sequences and operate with them to give useful tricks.
 
-## Dates sequences definition
+## Date sequence definition
 
-Use `seq.Date(from, to, by, length.out, along.with)` to define sequences of dates
+Use `seq.Date(from, to, by, length.out, along.with)` to define sequences of dates.
 
 The `by` parameter can be "day", "week", "month", "quarter" or "year" with a positive or negative integer preceding it and a space. Also a number that is taken as days.
 
@@ -34,10 +58,18 @@ tseq1 <- seq(from = as.Date('2000-01-01'), by = 10, len = 5)
 tseq1
 ```
 
+```{r, fig.height=2.5, fig.width=7.29}
+dateline(tseq1)
+```
+
 Same as tseq1 but every 2 weeks until 2000-02-28
 
 ```{r}
 (tseq2 <- seq.Date(as.Date("2000-01-01"), as.Date("2000-02-28"), by = "2 weeks"))
+```
+
+```{r, fig.height=2.5, fig.width=7.29}
+dateline(tseq2)
 ```
 
 Third sequence is the first days of the first 5 years of 21st century
@@ -45,6 +77,10 @@ Third sequence is the first days of the first 5 years of 21st century
 ```{r}
 tseq3 <- seq.Date(from = as.Date('2000-01-01'), by = 'years', len = 5)
 tseq3
+```
+
+```{r, fig.height=2.5, fig.width=7.29}
+dateline(tseq3)
 ```
 
 Last day of every quarter in 2002. Questions about last day in a period are more subtle as days in each period are different. The trick consists in computing first days of next quarters and substract 1 day
@@ -58,6 +94,11 @@ tseq4 <- seq.Date(from = as.Date('2002-04-01'),
 tseq4
 ```
 
+```{r, fig.height=2.5, fig.width=7.29}
+dateline(tseq4)
+```
+
+
 Last days of the first 5 month of 2004.
 ```{r}
 tseq5 <- seq.Date(from = as.Date('2004-01-31'),
@@ -69,6 +110,10 @@ tseq5
 tseq5 <- seq.Date(from = as.Date('2004-02-01'),
   by = "1 months", len = 5) - 1
 tseq5
+```
+
+```{r, fig.height=2.5, fig.width=7.29}
+dateline(tseq5)
 ```
 
 Note that in this example, "month" period does not work as expected for the last day of the month (from 29 to 31) as different month have different days. therefore, finding the last day of every month requires some care
@@ -84,6 +129,10 @@ tseq6 <- seq.Date(from = as.Date('2001-03-01'), to = as.Date("2007-03-01"),
 tseq6
 ```
 
+```{r, fig.height=2.5, fig.width=7.29}
+dateline(tseq6)
+```
+
 Find the second saturday of the first 6 months of 2004
 
 ```{r}
@@ -95,12 +144,20 @@ tseq7c <- as.Date(tseq7b, origin = "1970-01-01")
 tseq7c
 ```
 
+```{r, fig.height=2.5, fig.width=7.29}
+dateline(tseq7c)
+```
+
 Find the weekend days of August 2014
 
 ```{r}
 tseq8 <- seq.Date(as.Date("2014-08-01"), as.Date("2014-08-31"), by = 1)
 tseq8a <- tseq8[format(tseq8, "%u") > 5]
 tseq8a
+```
+
+```{r, fig.height=2.5, fig.width=7.29}
+dateline(tseq8a)
 ```
 
 Last Sunday of August of years 2001 to 2007
@@ -112,6 +169,10 @@ tseq9b <- rev(tseq9a)
 tseq9c <- tapply(tseq9b, format(tseq9b, "%Y"), '[', 1)
 tseq9d <- as.Date(tseq9c, origin = "1970-01-01")
 tseq9d
+```
+
+```{r, fig.height=2.5, fig.width=7.29}
+dateline(tseq9d)
 ```
 
 Find the number of days of each of the first 6 months of 2004 of the first week of the month (it includes any day of the month)
@@ -141,7 +202,7 @@ names(tseq11f) <- unique(format(tseq11, "%Y-%m"))
 tseq11f
 ```
 
-## using `xts` package
+## Using `xts` package
 
 ```{r}
 tseq1
@@ -203,9 +264,181 @@ do.call(
 )
 ```
 
+Equivalently
+```{r}
+do.call(
+  c,
+  lapply(split(xts7, "months"), function(x) index(x)[5])
+)
+```
+
 
 ```{r}
-# tapply(tseq7a, list(month = format(tseq7a, "%m")), '[', 5)
- tapply(tseq7a, list(month = format(tseq7a, "%m")))
+xts7 <- xts(rep(0, length(tseq7a)), tseq7a)
+index(apply.monthly(xts7, last)[apply.monthly(xts7, length) == 5])
 ```
+
+## Plot of date sequences
+
+### tseq1
+
+```{r}
+tseq1
+summary(tseq1)
+```
+
+```{r, fig.height=2.5, fig.width=7.29}
+dateline(tseq1)
+```
+
+```{r}
+n1 <- length(tseq1)
+xts1 <- xts(x = rnorm(n1), order.by = tseq1)
+colnames(xts1) <- "random"
+plot(xts1, type = "b", pch = 16)
+```
+
+
+```{r}
+dygraph(xts1)
+```
+
+```{r}
+tclass(xts1)
+```
+
+```{r}
+tclass(convertIndex(xts1, "POSIXct"))
+```
+
+```{r}
+tzone(xts1)
+```
+
+```{r}
+index(xts1)
+tformat(xts1) <- "%Y%m%d"
+index(xts1)
+xts1
+```
+
+```{r}
+str(xts1)
+```
+
+```{r}
+colnames(xts1) <- "rnorm"
+xts1
+str(xts1)
+```
+
+```{r}
+xtsAttributes(xts1)
+```
+
+Save an xts object
+
+```{r}
+write.zoo(xts1, file = "xts1.csv", col.names = T, sep = "\t", dec = ".")
+```
+
+Read the xts object back. Double check you are able to reproduce original data. There are multiple methods to do so.
+
+```{r}
+table1 <- read.table("xts1.csv", sep = "\t", dec = ".", stringsAsFactors = F, header = T)
+m1 <- as.matrix(table1[, -1])
+colnames(m1) <- colnames(table1)[-1]
+xts1_read <- xts(m1, order.by = as.Date(table1$Index))
+```
+
+Replace values in the xts object
+
+```{r}
+xts1[3] <- NA
+index(xts1)
+xts1["2000-02-10"] <- NA
+```
+
+```{r}
+dygraph(xts1)
+```
+
+```{r}
+plot(xts1, type = "b", pch = 16)
+```
+
+```{r}
+dygraph(na.omit(xts1))
+```
+
+Add a data point between existing ones
+
+```{r}
+xts1_extra <- xts(-1, order.by = as.Date("2000-01-15"))
+colnames(xts1_extra) <- "rnorm"
+```
+
+```{r}
+merge(xts1, xts1_extra)
+```
+
+```{r}
+rbind(xts1, xts1_extra)
+```
+
+
+```{r}
+xts1 + xts1_extra
+```
+
+```{r}
+xts1 + merge(xts1_extra, index(xts1), fill = 0)
+```
+
+If the date is already in the original xts index, you have to decide how to merge the values that correspond to the same date.
+
+```{r}
+xts1_extra2 <- xts(-1, order.by = as.Date("2000-01-11"))
+colnames(xts1_extra2) <- "rnorm"
+```
+
+```{r}
+rbind(xts1, xts1_extra2)
+```
+
+```{r}
+merge(xts1, xts1_extra2)
+```
+
+For instance, let us assume we want to take the minimum
+
+```{r}
+xts1_merged <- merge(xts1, xts1_extra2)
+xts1_merged
+```
+
+```{r}
+min_na <- function(x){
+  min_value <- ifelse(sum(is.na(x)) == length(x),
+    NA,
+    min(x, na.rm = T))
+  return(min_value)
+}
+```
+
+```{r}
+min_na(c(NA, NA))
+min_na(c(1, -0.5))
+min_na(c(-1, NA))
+```
+
+```{r}
+xts1_merged <- xts(apply(coredata(xts1_merged), 1, min_na), order.by = index(xts1_merged))
+colnames(xts1_merged) <- "rnorm"
+xts1_merged
+```
+
+
+
+
 
